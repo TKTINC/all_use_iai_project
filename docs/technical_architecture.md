@@ -1,233 +1,166 @@
-# ALL-USE Technical Architecture
+# ALL-USE Technical Architecture (v2 - iAI Rebuild)
 
 ## 1. Introduction
 
-This document details the technical architecture of the ALL-USE (Automated Lumpsum Leveraged US Equities) system. It is derived from and expands upon the `all_use_system_architecture_overview.md` and `all_use_project_overview.md` previously maintained in `co-pilot-docs`.
+This document details the technical architecture of the **ALL-USE (Automated Lumpsum Leveraged US Equities) REBUILD project**. It is designed to be implemented using the **iAI (intelligent Agent Interaction) framework**, emphasizing modularity, configurability, traceability, and prompt-driven development for each component.
 
-**System Purpose:** ALL-USE is an automated trading system designed to generate consistent income and build long-term wealth through a systematic, rule-based approach to options trading in US equity markets. It adapts to market conditions via week type classification and employs a triple-fork account structure for strategic capital allocation and growth. ALL-USE operates independently with its own core trading routines. It also exposes a comprehensive set of APIs to allow authorized external systems, like STAR-LAB, to request data, be notified of research strategies, and **critically, to instruct ALL-USE to execute and manage specific trading strategies (such as STAR-LAB's DIS, WIS, MIS) on their behalf.**
+**System Purpose (Rebuild Context):** ALL-USE is an automated trading system designed to generate consistent income and build long-term wealth through a systematic, rule-based approach to options trading in US equity markets. It adapts to market conditions (with week-type classification as a post-trade analysis feeding into a predictive system) and employs a triple-fork account structure (Gen-Acc, Rev-Acc, Com-Acc) for strategic capital allocation and growth. ALL-USE operates independently with its own core trading routines. It also functions as an execution platform for authorized external systems like STAR-LAB, enabling them to leverage its trading capabilities for specific strategies (e.g., DIS, WIS, MIS) via a secure API.
 
-## 2. High-Level Architecture
+This architecture is informed by the updated screenplays (`ALL_USE_Story_Screenplay_Mode_v3.md`, `all-use-development-guide-screenplay-claude_v3.md`) and the `all_use_iai_repo_structure_proposal_v2.md`.
 
-The ALL-USE system is a modular, service-oriented architecture composed of seven primary workstreams (components/services):
+## 2. High-Level Architecture (iAI Modular Design)
+
+The ALL-USE system is a modular, service-oriented architecture. Each module or significant sub-component will be developed as a distinct iAI workstream or phase, ensuring clear responsibilities and verifiable outputs.
 
 ```
-ALL-USE System
-├── Testing Infrastructure
-│   ├── IBKR API Mock Framework
-│   ├── Component Integration Tests
-│   ├── End-to-End Test Scenarios
-│   └── CI/CD Integration
-├── Data Pipeline
-│   ├── Market Data Collection (Real-time & Historical)
-│   ├── Options Chain Data Processing
-│   ├── Data Validation & Cleaning
-│   └── Data Storage & Integration (Time-series DB, Relational DB)
-├── Protocol Engine (Core Business Logic & External API Execution)
-│   ├── Core Framework (Event-driven, Config Mgmt)
-│   ├── Market Analysis Engine (Week Type Classification, Signal Generation - for ALL-USE internal strategies)
-│   ├── Account Management System (Triple-Fork Logic, Capital Allocation - for ALL-USE internal & STAR-LAB delegated funds)
-│   ├── Strategy Engine (Gen-Acc, Rev-Acc, Com-Acc strategies - for ALL-USE internal)
-│   ├── Execution Engine (Order Generation, Protocol Rules - for ALL-USE internal & STAR-LAB API instructed trades)
-│   ├── Intelligence Layer (Premium Analysis, LEAPS Opt., ML Feedback - for ALL-USE internal)
-│   └── External Trading API Management Module (Handles STAR-LAB DIS/WIS/MIS trade instructions)
-├── Operations & Monitoring
-│   ├── System Health Monitoring (Prometheus, Grafana)
-│   ├── Performance Metrics & Alerting
-│   ├── Log Management (ELK Stack or similar)
-│   └── Operational Procedures & Automation
-├── Reporting
-│   ├── Daily/Weekly Performance Reports (for ALL-USE internal & STAR-LAB delegated trades)
-│   ├── Risk & Compliance Reporting
-│   ├── Data Visualization Engine
-│   └── Custom Report Generation
-├── Web UI (User Interface)
-│   ├── Command Center Dashboard
-│   ├── Account Management Interface
-│   ├── Strategy Visualization & Configuration
-│   └── Reporting Interface
-└── Feedback Loop (Continuous Improvement - for ALL-USE internal strategies)
-    ├── Performance Analysis Engine
-    ├── Strategy Optimization Algorithms
-    ├── A/B Testing Framework Integration
-    └── Learning System (ML-driven insights)
+ALL-USE System (iAI Rebuild)
+├── 00_Project_Orchestration_And_Command_Center (iAI Management)
+├── 01_Core_Infrastructure_And_Configuration
+│   ├── Configuration_Management_Service (config_manager.py)
+│   ├── Secure_Secrets_Management
+│   └── Cloud_Environment_Setup (as per Cloud_Migration_and_Deployment_Architecture_v2.md)
+├── 02_Data_Pipeline_Services
+│   ├── Market_Data_Ingestion_And_Processing (Real-time & Historical)
+│   ├── Options_Chain_Data_Services
+│   ├── Data_Validation_Cleaning_And_Storage (Time-series DB, Relational DB)
+│   └── Data_API_Services (Internal & for STAR-LAB if applicable)
+├── 03_Protocol_Engine_Core_Services
+│   ├── Trading_Strategy_Framework_Service
+│   │   ├── Gen_Acc_Strategy_Module
+│   │   ├── Rev_Acc_Strategy_Module
+│   │   └── Com_Acc_Strategy_Module
+│   ├── Order_Execution_Service (Broker API Integration, Protocol Rules)
+│   ├── Position_Management_Service
+│   └── Market_Analysis_Service (e.g., Week Type Classification - post-trade analysis)
+├── 04_Account_Lifecycle_Management_Services (Watchdogs)
+│   ├── Account_Entity_Service (Manages Gen/Rev/Com account states)
+│   ├── Forking_Service_Watchdog (Monitors surplus, initiates forking workflow)
+│   ├── Reinvestment_Service_Watchdog (Quarterly/Weekly reinvestment logic)
+│   ├── Merging_Service_Watchdog (Monitors forked accounts for merge criteria)
+│   └── Capital_Allocation_Service (Manages fund distribution during forking/reinvestment)
+├── 05_External_Integrations_And_APIs
+│   ├── STAR_LAB_Trading_API_Service (Handles DIS/WIS/MIS trade instructions)
+│   └── Broker_API_Integration_Service (abstracted interaction layer)
+├── 06_Operations_Monitoring_And_Alerting_Services
+│   ├── System_Health_Monitoring_Service (Prometheus, Grafana)
+│   ├── Performance_Metrics_And_Alerting_Service (Includes human-in-the-loop alerts)
+│   └── Centralized_Log_Management_Service (ELK Stack or similar)
+├── 07_Reporting_And_Analytics_Services
+│   ├── Performance_Reporting_Service (Pre & Post-tax, for ALL-USE & STAR-LAB trades)
+│   ├── Risk_Analytics_Service
+│   └── Data_Visualization_Service
+├── 08_Web_UI_Services
+│   ├── Frontend_Application (React, responsive for future mobile)
+│   └── Backend_For_Frontend_API_Service
+├── 09_Compliance_And_Audit_Services
+│   ├── Audit_Trail_Service (Immutable logs of all actions)
+│   ├── Compliance_Rule_Engine_Service
+│   └── Regulatory_Reporting_Support_Service
+├── 10_Feedback_Loop_And_Optimization_Services (for ALL-USE internal strategies)
+│   ├── Performance_Analysis_Engine (Post-trade week-type classification feeds here)
+│   ├── Strategy_Parameter_Optimization_Service
+│   └── Predictive_Analytics_Service (Utilizing historical week-type outcomes)
+└── 11_Build_Deploy_Test_Framework_Integration (as per BDTFramework_v2.md)
+    ├── CI_CD_Pipeline_Management
+    └── Automated_Testing_Services_Integration
 ```
 
-### Data Flow Overview (including STAR-LAB API interaction):
+### Data Flow Overview (iAI Context):
 
-1.  **Data Pipeline:** Collects, validates, processes, and stores market data.
-2.  **Protocol Engine (Internal):** Consumes data; analyzes market; classifies week types; applies account-specific strategies; generates trading signals and orders for ALL-USE's own strategies.
-3.  **Protocol Engine (External Trading API Management Module):** Receives trade instructions from STAR-LAB (for DIS, WIS, MIS) via the ALL-USE Trading API. Validates instructions, allocates specific capital (if applicable), and passes them to the Execution Engine.
-4.  **Execution Engine (within Protocol Engine):** Takes trading signals (from internal ALL-USE strategies OR from STAR-LAB via API), evaluates against protocol rules, and prepares orders for execution via broker APIs. Manages order lifecycle and updates status back to the originating source (internal strategy or STAR-LAB via API).
-5.  **Operations & Monitoring:** Collects logs and metrics from all components.
-6.  **Reporting:** Consumes data from Protocol Engine (including STAR-LAB initiated trades), Data Pipeline, and Operations to generate reports.
-7.  **Web UI:** Provides user interface for system monitoring, configuration, and viewing reports.
-8.  **Feedback Loop:** Analyzes performance data for ALL-USE's internal strategies.
+Each data flow step will be implemented and verified through specific iAI phases.
+1.  **Data Pipeline Services:** Collect, validate, process, and store market data.
+2.  **Protocol Engine Core Services (Internal Strategies):** Consumes data; Trading Strategy Modules (Gen/Rev/Com) generate trading signals based on their configurations (managed by `config_manager.py`). Order Execution Service processes these signals.
+3.  **STAR_LAB_Trading_API_Service:** Receives trade instructions from STAR-LAB. Validates, logs, and passes instructions to the Order Execution Service.
+4.  **Order_Execution_Service:** Takes trading signals (internal or STAR-LAB), applies protocol rules, prepares orders for execution via Broker API Integration Service. Manages order lifecycle and updates status.
+5.  **Account_Lifecycle_Management_Services:** Monitor account states and trigger forking, reinvestment, or merging workflows based on configurable rules and post-tax calculations.
+6.  **Operations_Monitoring_And_Alerting_Services:** Collect logs and metrics. Generate alerts, including human-in-the-loop for critical events.
+7.  **Reporting_And_Analytics_Services:** Generate reports for internal use and for STAR-LAB trades.
+8.  **Web_UI_Services:** Provide user interface.
+9.  **Compliance_And_Audit_Services:** Log all transactions and decisions for auditability.
+10. **Feedback_Loop_And_Optimization_Services:** Analyze performance, including post-trade week-type classification, to refine strategies or predictive models.
 
-## 3. Component Deep Dive
+## 3. Component Deep Dive (iAI Module Perspective)
 
-(Sections 3.1 - 3.7 remain largely the same, with minor notes where STAR-LAB interaction is relevant)
+Each component below will be developed as one or more iAI workstreams/phases.
 
-### 3.1. Data Pipeline
-   - **Responsibilities:** Reliable and timely market data acquisition, processing, and storage.
-   - **Key Technologies:** Python, Pandas, NumPy, Kafka, Airflow, InfluxDB, PostgreSQL.
-   - **Interfaces:** Provides data APIs for Protocol Engine, Reporting, and the **ALL-USE Data/Notification API** for STAR-LAB.
+### 3.1. Core Infrastructure & Configuration (`01_...`)
+   - **Responsibilities:** Centralized configuration, secure secret management, foundational cloud setup.
+   - **Key Technologies:** Python for `config_manager.py`, HashiCorp Vault or cloud KMS.
 
-### 3.2. Protocol Engine
-   - **Responsibilities:** Core trading logic for ALL-USE internal strategies, execution of trades instructed by STAR-LAB via API, account management, risk management.
-   - **Key Technologies:** Python, FastAPI, SQLAlchemy.
-   - **Sub-components:**
-      - **Market Analysis Engine:** For ALL-USE internal strategies.
-      - **Account Management System:** Manages state and capital for ALL-USE internal strategies and for funds allocated to STAR-LAB instructed trades (if applicable, or tracks STAR-LAB trades under a specific ALL-USE managed account segment).
-      - **Strategy Engine:** Implements trading rules for ALL-USE internal strategies.
-      - **Execution Engine:** Manages order lifecycle for both internal and STAR-LAB API instructed trades. Interacts with broker APIs.
-      - **Intelligence Layer:** For ALL-USE internal strategies.
-      - **External Trading API Management Module (New/Enhanced):** Dedicated module within the Protocol Engine responsible for receiving, validating, processing, and managing the lifecycle of trade instructions from STAR-LAB for DIS, WIS, MIS via the ALL-USE Trading API. It liaises with the Account Management System for capital allocation (if needed) and the Execution Engine for order placement. It also provides status updates and performance data back to STAR-LAB via the API.
+### 3.2. Data Pipeline Services (`02_...`)
+   - **Responsibilities:** Reliable market data. Configurable data sources.
+   - **Key Technologies:** Python, Pandas, Kafka/RabbitMQ (if needed), Airflow (optional), InfluxDB/TimescaleDB, PostgreSQL.
 
-### 3.3. Operations & Monitoring
-   - (No significant change, but monitoring will cover STAR-LAB initiated trades as well)
+### 3.3. Protocol Engine Core Services (`03_...`)
+   - **Responsibilities:** Core trading logic, order execution, position management.
+   - **Key Technologies:** Python, FastAPI (for internal APIs if any).
+   - **Sub-components:** Gen/Rev/Com Acc Strategy Modules will be highly configurable (tickers, deltas, capital allocation % per trade via `config_manager.py`).
 
-### 3.4. Web UI
-   - (No significant change, but UI might eventually show STAR-LAB initiated trade activity if required by ALL-USE admins)
+### 3.4. Account Lifecycle Management Services (Watchdogs) (`04_...`)
+   - **Responsibilities:** Automated account forking, reinvestment (shares/LEAPS, pre/post-tax configurable), merging. Operates based on configurable thresholds and rules.
+   - **Key Technologies:** Python, potentially a rules engine or scheduled task framework.
 
-### 3.5. Reporting
-   - **Responsibilities:** Generating insightful reports on performance, risk, and compliance for ALL-USE internal strategies AND for trades executed on behalf of STAR-LAB.
+### 3.5. External Integrations & APIs (`05_...`)
+   - **STAR_LAB_Trading_API_Service:** Securely handles instructions from STAR-LAB as detailed in section 6.1.2.
+   - **Broker_API_Integration_Service:** Abstracted layer for broker interactions.
 
-### 3.6. Feedback Loop
-   - (Primarily for ALL-USE internal strategies)
+### 3.6. Operations, Monitoring & Alerting Services (`06_...`)
+   - **Responsibilities:** System health, performance metrics, centralized logging, critical alerts (including human-in-the-loop for trading decisions if configured).
 
-### 3.7. Testing Infrastructure
-   - (Testing will need to cover the new Trading API endpoints and the lifecycle of STAR-LAB instructed trades)
+### 3.7. Reporting & Analytics Services (`07_...`)
+   - **Responsibilities:** Performance (pre/post-tax), risk, and custom reports.
 
-## 4. Technical Stack Summary
+### 3.8. Web UI Services (`08_...`)
+   - **Responsibilities:** User interface for command center, account management, strategy config, reporting. Designed for future mobile app compatibility.
 
-- (No significant change)
+### 3.9. Compliance & Audit Services (`09_...`)
+   - **Responsibilities:** Ensuring auditable, compliant operations. Immutable logging of all financial transactions and critical decisions.
+
+### 3.10. Feedback Loop & Optimization Services (`10_...`)
+    - **Responsibilities:** Post-trade analysis (including week-type classification), strategy parameter refinement, building predictive models based on historical outcomes.
+
+## 4. Technical Stack Summary (iAI Phase Defined)
+
+- **Primary Language:** Python (Backend, Data, ML)
+- **Frontend:** React (JavaScript/TypeScript)
+- **Databases:** PostgreSQL (Relational), InfluxDB/TimescaleDB (Time-series)
+- **Messaging:** Kafka or RabbitMQ (if complex eventing needed, decided in an iAI phase)
+- **Containerization & Orchestration:** Docker, Kubernetes (as per `Cloud_Migration_and_Deployment_Architecture_v2.md`)
+- **CI/CD:** GitHub Actions (as per `BDTFramework_v2.md`)
+- **Configuration:** Custom Python-based `config_manager.py` integrated with secure secret storage.
 
 ## 5. Deployment Architecture
 
-- (No significant change)
+Refer to `Cloud_Migration_and_Deployment_Architecture_v2.md` for details on cloud deployment, which will also be implemented via iAI phases.
 
-## 6. Integration Points & APIs
+## 6. Integration Points & APIs (iAI Defined Contracts)
 
-- **Internal APIs:** (No significant change)
-- **External APIs (Broker, Data Providers):** (No significant change)
+Internal APIs between services will be defined via iAI prompts for each service. External APIs are critical.
 
 ### 6.1. ALL-USE External APIs for STAR-LAB Interaction
 
-ALL-USE exposes a set of secure APIs to enable controlled interaction with authorized external systems like STAR-LAB. These are broadly categorized into a Data/Notification API and a Trading API.
+(This section remains largely the same as the previous version, detailing the Data/Notification API and the expanded Trading API for DIS/WIS/MIS. All API contracts will be formally defined and versioned as part of their respective iAI development phases.)
 
--   **Authentication:** Secure, token-based authentication (e.g., OAuth 2.0 client credentials flow or API keys) for all STAR-LAB API interactions.
--   **Versioning:** All APIs will be versioned (e.g., `/api/v1/...`).
+-   **Authentication:** Secure, token-based authentication.
+-   **Versioning:** All APIs versioned.
 -   **Error Handling:** Standard HTTP status codes and structured JSON error responses.
 
 #### 6.1.1. ALL-USE Data/Notification API (for STAR-LAB Research Interaction)
-
--   **Purpose:** Enable STAR-LAB to request specific data from ALL-USE or notify ALL-USE of its research findings for ALL-USE's independent consideration.
--   **Base Path:** `/api/v1/starlab_interface/data_notifications`
--   **Key Endpoints (Conceptual - from previous version, remains relevant for research):**
-    1.  **`POST /request_data`** (For STAR-LAB to request data from ALL-USE)
-    2.  **`POST /notify_validated_strategy`** (For STAR-LAB to inform ALL-USE of a research strategy)
+   - (Endpoints as previously defined, to be confirmed/refined in an iAI phase)
 
 #### 6.1.2. ALL-USE Trading API (for STAR-LAB DIS/WIS/MIS Execution)
+   - (Endpoints for `submit_trade_instruction`, `order_status`, `positions`, `performance`, `cancel_order` as previously detailed. Request/Response bodies will be strictly defined JSON schemas in their iAI phase.)
 
--   **Purpose:** Enable STAR-LAB to instruct ALL-USE to execute and manage trades for STAR-LAB's formulated Daily Income Scheme (DIS), Weekly Income Scheme (WIS), and Monthly Income Scheme (MIS). ALL-USE takes responsibility for the execution, position management, and reporting on these trades back to STAR-LAB.
--   **Base Path:** `/api/v1/starlab_interface/trading`
+## 7. Scalability, Performance, Security, and Compliance
 
--   **Key Endpoints (Conceptual - New/Expanded for Trading):**
+These aspects are paramount and will be addressed systematically:
+-   **Scalability & Performance:** Achieved through modular design, cloud-native services, and targeted optimization in iAI phases.
+-   **Security:** Built-in from the start, with dedicated iAI phases for security controls, secure coding practices, and regular audits (as per `Cloud_Migration_and_Deployment_Architecture_v2.md`).
+-   **Compliance:** Addressed through the `Compliance_And_Audit_Services` module and by ensuring all operations are auditable and adhere to defined regulatory requirements. Specific compliance features will be implemented in dedicated iAI phases.
 
-    1.  **`POST /submit_trade_instruction`**
-        *   **Description:** STAR-LAB submits a detailed trade instruction for ALL-USE to execute for a specific STAR-LAB scheme (DIS, WIS, MIS).
-        *   **Request Body (JSON):**
-            ```json
-            {
-              "starlab_strategy_id": "DIS_AAPL_20250507_001",
-              "scheme_type": "DIS", // "DIS", "WIS", "MIS"
-              "symbol": "AAPL",
-              "trade_action": "BUY_TO_OPEN_CALL" // e.g., "SELL_TO_OPEN_PUT", "BUY_TO_CLOSE_CALL", etc.
-              "quantity": 1,
-              "order_type": "LIMIT", // "LIMIT", "MARKET"
-              "limit_price": 150.25, // Required if order_type is LIMIT
-              "expiration_date": "YYYY-MM-DD", // For options
-              "strike_price": 150.00, // For options
-              "time_in_force": "DAY", // "DAY", "GTC"
-              "client_order_id": "unique_starlab_order_ref_123", // STAR-LAB's internal reference
-              "account_tag": "STARLAB_DIS_FUND" // Optional tag for ALL-USE internal fund segregation if applicable
-            }
-            ```
-        *   **Response Body (JSON - Synchronous Acknowledgement):**
-            ```json
-            {
-              "all_use_order_id": "au_uuid_order_789",
-              "client_order_id": "unique_starlab_order_ref_123",
-              "status": "RECEIVED", // or "VALIDATION_FAILED"
-              "message": "Trade instruction received and queued for execution.",
-              "validation_errors": [] // if status is VALIDATION_FAILED
-            }
-            ```
+## 8. Future Considerations
 
-    2.  **`GET /order_status/{all_use_order_id}`**
-        *   **Description:** STAR-LAB queries the status of a previously submitted trade instruction.
-        *   **Response Body (JSON):**
-            ```json
-            {
-              "all_use_order_id": "au_uuid_order_789",
-              "client_order_id": "unique_starlab_order_ref_123",
-              "starlab_strategy_id": "DIS_AAPL_20250507_001",
-              "status": "FILLED", // "PENDING_SUBMIT", "SUBMITTED", "PARTIALLY_FILLED", "FILLED", "CANCELLED", "REJECTED"
-              "filled_quantity": 1,
-              "average_fill_price": 150.20,
-              "commission": 0.65,
-              "timestamp": "YYYY-MM-DDTHH:MM:SSZ",
-              "broker_order_id": "broker_specific_id_xyz"
-            }
-            ```
+The iAI framework allows for easier evolution. Future modules or enhancements will be new workstreams/phases.
 
-    3.  **`GET /positions/{starlab_strategy_id}`**
-        *   **Description:** STAR-LAB queries current positions held by ALL-USE that were initiated by a specific STAR-LAB strategy ID.
-        *   **Response Body (JSON - Array of positions):**
-            ```json
-            [
-              {
-                "symbol": "AAPL",
-                "position_type": "LONG_CALL",
-                "quantity": 1,
-                "average_entry_price": 150.20,
-                "market_value": 15500.00,
-                "unrealized_pnl": 480.00,
-                "all_use_order_id_open": "au_uuid_order_789"
-              }
-            ]
-            ```
-
-    4.  **`GET /performance/{starlab_strategy_id}`**
-        *   **Description:** STAR-LAB requests performance metrics for trades associated with a specific STAR-LAB strategy ID.
-        *   **Response Body (JSON):**
-            ```json
-            {
-              "starlab_strategy_id": "DIS_AAPL_20250507_001",
-              "realized_pnl": 120.50,
-              "unrealized_pnl": 480.00,
-              "total_trades": 5,
-              "winning_trades": 3,
-              "losing_trades": 2,
-              "commissions_paid": 3.25
-            }
-            ```
-
-    5.  **`POST /cancel_order/{all_use_order_id}`** (If ALL-USE supports cancellation of STAR-LAB initiated orders)
-        *   **Description:** STAR-LAB requests cancellation of a pending order.
-        *   **Response Body (JSON):** `{ "status": "CANCEL_REQUESTED/FAILED", "message": "..." }`
-
--   **Data Contracts:** Detailed JSON schemas for all request and response bodies will be maintained and versioned.
--   **Security:** Beyond authentication, consider rate limiting, input validation, and potentially IP whitelisting for STAR-LAB's access.
--   **Operational Considerations for ALL-USE:** ALL-USE's Protocol Engine will need robust logic to handle these API-driven trades, including risk checks, capital allocation (if applicable), and ensuring these trades do not conflict with ALL-USE's internal strategies or risk limits. ALL-USE maintains ultimate control over execution.
-
-This expanded Trading API allows ALL-USE to act as an execution platform for STAR-LAB's formulated DIS, WIS, and MIS strategies, promoting synergy while maintaining clear operational boundaries.
-
-## 7. Scalability and Performance Considerations
-- (No significant change, but API performance will be critical)
-
-## 8. Future Considerations (from original docs)
-- (No significant change)
-
-This document will be updated as the ALL-USE system evolves.
+This document will be the guiding architectural reference, updated iteratively as iAI phases complete and refine details. The `comprehensive_documentation.md` will reflect the live state of this architecture.
 
